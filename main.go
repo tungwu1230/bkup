@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -14,7 +15,11 @@ import (
 )
 
 func main() {
-	if err := Run(os.Args[1:], os.Stdout); err != nil {
+	err := Run(os.Args[1:], os.Stdout)
+	if errors.Is(err, flag.ErrHelp) {
+		os.Exit(0)
+	}
+	if err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
@@ -23,6 +28,7 @@ func main() {
 // Run parses args and performs a backup, writing progress/summary to stdout.
 func Run(args []string, stdout io.Writer) error {
 	fs := flag.NewFlagSet("backup-cli", flag.ContinueOnError)
+	fs.SetOutput(stdout)
 
 	var outputDir string
 	fs.StringVar(&outputDir, "o", ".", "output directory for the backup zip")
@@ -32,11 +38,18 @@ func Run(args []string, stdout io.Writer) error {
 	fs.BoolVar(&verbose, "v", false, "list files as they are packed")
 	fs.BoolVar(&verbose, "verbose", false, "list files as they are packed")
 
+	fs.Usage = func() {
+		fmt.Fprintln(fs.Output(), "Usage: backup-cli [-o output-dir] [-v] <folder>")
+		fmt.Fprintln(fs.Output())
+		fs.PrintDefaults()
+	}
+
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
 	if fs.NArg() < 1 {
-		return fmt.Errorf("usage: backup-cli [-o output-dir] [-v] <folder>")
+		fs.Usage()
+		return fmt.Errorf("missing required <folder> argument")
 	}
 	sourceDir := fs.Arg(0)
 

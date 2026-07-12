@@ -3,6 +3,8 @@ package main
 import (
 	"archive/zip"
 	"bytes"
+	"errors"
+	"flag"
 	"os"
 	"path/filepath"
 	"strings"
@@ -82,8 +84,26 @@ func TestRun_LongFormFlagsWork(t *testing.T) {
 
 func TestRun_ReturnsErrorWhenFolderArgMissing(t *testing.T) {
 	var stdout bytes.Buffer
-	if err := Run([]string{}, &stdout); err == nil {
-		t.Error("Run() error = nil, want error for missing folder argument")
+	err := Run([]string{}, &stdout)
+	if err == nil {
+		t.Fatal("Run() error = nil, want error for missing folder argument")
+	}
+	if errors.Is(err, flag.ErrHelp) {
+		t.Error("Run() error = flag.ErrHelp, want a distinct missing-argument error")
+	}
+	if !strings.Contains(stdout.String(), "<folder>") {
+		t.Errorf("stdout = %q, want it to include usage mentioning <folder>", stdout.String())
+	}
+}
+
+func TestRun_HelpFlagReturnsErrHelpAndPrintsFolderUsage(t *testing.T) {
+	var stdout bytes.Buffer
+	err := Run([]string{"--help"}, &stdout)
+	if !errors.Is(err, flag.ErrHelp) {
+		t.Fatalf("Run() error = %v, want flag.ErrHelp", err)
+	}
+	if !strings.Contains(stdout.String(), "<folder>") {
+		t.Errorf("stdout = %q, want usage text to mention <folder>", stdout.String())
 	}
 }
 
