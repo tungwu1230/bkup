@@ -24,11 +24,11 @@ func main() {
 func Run(args []string, stdout io.Writer) error {
 	fs := flag.NewFlagSet("backup-cli", flag.ContinueOnError)
 
-	outputDir := "."
+	var outputDir string
 	fs.StringVar(&outputDir, "o", ".", "output directory for the backup zip")
 	fs.StringVar(&outputDir, "output", ".", "output directory for the backup zip")
 
-	verbose := false
+	var verbose bool
 	fs.BoolVar(&verbose, "v", false, "list files as they are packed")
 	fs.BoolVar(&verbose, "verbose", false, "list files as they are packed")
 

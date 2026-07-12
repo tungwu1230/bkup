@@ -7,6 +7,9 @@ import (
 	"backup-cli/internal/ignore"
 )
 
+// gitDir is always excluded, independent of .gitignore rules.
+const gitDir = ".git"
+
 // Collect walks rootDir and returns the "/"-separated relative paths of all
 // regular files that are not excluded by m and are not inside .git.
 func Collect(rootDir string, m *ignore.Matcher) ([]string, error) {
@@ -27,7 +30,7 @@ func Collect(rootDir string, m *ignore.Matcher) ([]string, error) {
 		rel = filepath.ToSlash(rel)
 
 		if d.IsDir() {
-			if d.Name() == ".git" {
+			if d.Name() == gitDir {
 				return filepath.SkipDir
 			}
 			if m.Match(rel, true) {

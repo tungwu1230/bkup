@@ -56,6 +56,30 @@ func TestRun_CreatesBackupZipRespectingGitignore(t *testing.T) {
 	}
 }
 
+func TestRun_LongFormFlagsWork(t *testing.T) {
+	srcDir := t.TempDir()
+	mustWrite(t, filepath.Join(srcDir, "main.go"), "package main")
+
+	outDir := t.TempDir()
+
+	var stdout bytes.Buffer
+	if err := Run([]string{"--output", outDir, "--verbose", srcDir}, &stdout); err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+
+	entries, err := os.ReadDir(outDir)
+	if err != nil {
+		t.Fatalf("ReadDir() error = %v", err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("expected 1 file in output dir, got %d: %v", len(entries), entries)
+	}
+
+	if !strings.Contains(stdout.String(), "main.go") {
+		t.Errorf("stdout = %q, want it to list main.go (verbose mode)", stdout.String())
+	}
+}
+
 func TestRun_ReturnsErrorWhenFolderArgMissing(t *testing.T) {
 	var stdout bytes.Buffer
 	if err := Run([]string{}, &stdout); err == nil {
