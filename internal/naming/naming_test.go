@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"backup-cli/internal/naming"
+	"bkup/internal/naming"
 )
 
 func TestOutputPath_BuildsFilenameFromFolderNameAndDate(t *testing.T) {

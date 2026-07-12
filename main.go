@@ -8,10 +8,10 @@ import (
 	"os"
 	"time"
 
-	"backup-cli/internal/archive"
-	"backup-cli/internal/ignore"
-	"backup-cli/internal/naming"
-	"backup-cli/internal/walker"
+	"bkup/internal/archive"
+	"bkup/internal/ignore"
+	"bkup/internal/naming"
+	"bkup/internal/walker"
 )
 
 func main() {
@@ -27,7 +27,7 @@ func main() {
 
 // Run parses args and performs a backup, writing progress/summary to stdout.
 func Run(args []string, stdout io.Writer) error {
-	fs := flag.NewFlagSet("backup-cli", flag.ContinueOnError)
+	fs := flag.NewFlagSet("bkup", flag.ContinueOnError)
 	fs.SetOutput(stdout)
 
 	var outputDir string
@@ -39,7 +39,7 @@ func Run(args []string, stdout io.Writer) error {
 	fs.BoolVar(&verbose, "verbose", false, "list files as they are packed")
 
 	fs.Usage = func() {
-		fmt.Fprintln(fs.Output(), "Usage: backup-cli [-o output-dir] [-v] <folder>")
+		fmt.Fprintln(fs.Output(), "Usage: bkup [-o output-dir] [-v] <folder>")
 		fmt.Fprintln(fs.Output())
 		fs.PrintDefaults()
 	}

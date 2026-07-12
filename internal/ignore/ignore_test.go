@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"backup-cli/internal/ignore"
+	"bkup/internal/ignore"
 )
 
 func TestMatch_IgnoresFileMatchingPattern(t *testing.T) {

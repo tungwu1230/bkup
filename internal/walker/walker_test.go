@@ -7,8 +7,8 @@ import (
 	"sort"
 	"testing"
 
-	"backup-cli/internal/ignore"
-	"backup-cli/internal/walker"
+	"bkup/internal/ignore"
+	"bkup/internal/walker"
 )
 
 func TestCollect_ReturnsAllFilesWhenNothingIgnored(t *testing.T) {

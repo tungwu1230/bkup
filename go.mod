@@ -1,4 +1,4 @@
-module backup-cli
+module bkup
 
 go 1.26.3
 

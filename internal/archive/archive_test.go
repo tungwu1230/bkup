@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"backup-cli/internal/archive"
+	"bkup/internal/archive"
 )
 
 func TestCreate_WritesFilesWithRelativePathsAndContent(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"backup-cli/internal/ignore"
+	"bkup/internal/ignore"
 )
 
 // gitDir is always excluded, independent of .gitignore rules.
