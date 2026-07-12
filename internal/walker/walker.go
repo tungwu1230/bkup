@@ -11,9 +11,12 @@ import (
 const gitDir = ".git"
 
 // Collect walks rootDir and returns the "/"-separated relative paths of all
-// regular files that are not excluded by m and are not inside .git.
+// entries (directories, regular files, and symlinks) that are not excluded
+// by m and are not inside .git. Directories are included so that empty
+// directories and directory metadata survive the backup. Irregular entries
+// such as sockets and device files are skipped.
 func Collect(rootDir string, m *ignore.Matcher) ([]string, error) {
-	var files []string
+	var entries []string
 
 	err := filepath.WalkDir(rootDir, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
@@ -36,17 +39,21 @@ func Collect(rootDir string, m *ignore.Matcher) ([]string, error) {
 			if m.Match(rel, true) {
 				return filepath.SkipDir
 			}
+			entries = append(entries, rel)
 			return nil
 		}
 
+		if !d.Type().IsRegular() && d.Type()&os.ModeSymlink == 0 {
+			return nil
+		}
 		if m.Match(rel, false) {
 			return nil
 		}
-		files = append(files, rel)
+		entries = append(entries, rel)
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	return files, nil
+	return entries, nil
 }

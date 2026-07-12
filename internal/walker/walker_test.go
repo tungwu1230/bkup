@@ -54,7 +54,34 @@ func TestCollect_ExcludesFilesMatchingGitignoreAndIncludesNestedFiles(t *testing
 	}
 	sort.Strings(got)
 
-	want := []string{".gitignore", "main.go", "src/app.go"}
+	want := []string{".gitignore", "main.go", "src", "src/app.go"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Collect() = %v, want %v", got, want)
+	}
+}
+
+func TestCollect_IncludesEmptyDirectoriesAndSymlinks(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "main.go"), "package main")
+	if err := os.MkdirAll(filepath.Join(dir, "empty"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.Symlink("main.go", filepath.Join(dir, "link.go")); err != nil {
+		t.Fatalf("symlink: %v", err)
+	}
+
+	m, err := ignore.Load(dir)
+	if err != nil {
+		t.Fatalf("ignore.Load() error = %v", err)
+	}
+
+	got, err := walker.Collect(dir, m)
+	if err != nil {
+		t.Fatalf("Collect() error = %v", err)
+	}
+	sort.Strings(got)
+
+	want := []string{"empty", "link.go", "main.go"}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Collect() = %v, want %v", got, want)
 	}

@@ -31,8 +31,8 @@ func Run(args []string, stdout io.Writer) error {
 	fs.SetOutput(stdout)
 
 	var outputDir string
-	fs.StringVar(&outputDir, "o", ".", "output directory for the backup zip")
-	fs.StringVar(&outputDir, "output", ".", "output directory for the backup zip")
+	fs.StringVar(&outputDir, "o", ".", "output directory for the backup archive")
+	fs.StringVar(&outputDir, "output", ".", "output directory for the backup archive")
 
 	var verbose bool
 	fs.BoolVar(&verbose, "v", false, "list files as they are packed")
@@ -58,21 +58,21 @@ func Run(args []string, stdout io.Writer) error {
 		return fmt.Errorf("load .gitignore: %w", err)
 	}
 
-	files, err := walker.Collect(sourceDir, m)
+	entries, err := walker.Collect(sourceDir, m)
 	if err != nil {
 		return fmt.Errorf("collect files: %w", err)
 	}
 
-	zipPath := naming.OutputPath(sourceDir, outputDir, time.Now())
-	if err := archive.Create(zipPath, sourceDir, files); err != nil {
+	archivePath := naming.OutputPath(sourceDir, outputDir, time.Now())
+	if err := archive.Create(archivePath, sourceDir, entries); err != nil {
 		return fmt.Errorf("create archive: %w", err)
 	}
 
 	if verbose {
-		for _, f := range files {
-			fmt.Fprintln(stdout, f)
+		for _, e := range entries {
+			fmt.Fprintln(stdout, e)
 		}
 	}
-	fmt.Fprintf(stdout, "backed up %d files to %s\n", len(files), zipPath)
+	fmt.Fprintf(stdout, "backed up %d entries to %s\n", len(entries), archivePath)
 	return nil
 }

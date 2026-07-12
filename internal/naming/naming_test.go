@@ -15,7 +15,7 @@ func TestOutputPath_BuildsFilenameFromFolderNameAndDate(t *testing.T) {
 
 	got := naming.OutputPath(sourceDir, outputDir, now)
 
-	want := filepath.Join(outputDir, "myapp_backup_20260713.zip")
+	want := filepath.Join(outputDir, "myapp_backup_20260713.tar.gz")
 	if got != want {
 		t.Errorf("OutputPath() = %q, want %q", got, want)
 	}

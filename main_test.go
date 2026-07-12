@@ -1,17 +1,19 @@
 package main
 
 import (
-	"archive/zip"
+	"archive/tar"
 	"bytes"
+	"compress/gzip"
 	"errors"
 	"flag"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
 
-func TestRun_CreatesBackupZipRespectingGitignore(t *testing.T) {
+func TestRun_CreatesBackupArchiveRespectingGitignore(t *testing.T) {
 	srcDir := t.TempDir()
 	mustWrite(t, filepath.Join(srcDir, ".gitignore"), "*.log\n")
 	mustWrite(t, filepath.Join(srcDir, "main.go"), "package main")
@@ -32,29 +34,43 @@ func TestRun_CreatesBackupZipRespectingGitignore(t *testing.T) {
 	if len(entries) != 1 {
 		t.Fatalf("expected 1 file in output dir, got %d: %v", len(entries), entries)
 	}
-	zipName := entries[0].Name()
-	if !strings.HasPrefix(zipName, folderName+"_backup_") || !strings.HasSuffix(zipName, ".zip") {
-		t.Errorf("zip name = %q, want prefix %q and suffix .zip", zipName, folderName+"_backup_")
+	archiveName := entries[0].Name()
+	if !strings.HasPrefix(archiveName, folderName+"_backup_") || !strings.HasSuffix(archiveName, ".tar.gz") {
+		t.Errorf("archive name = %q, want prefix %q and suffix .tar.gz", archiveName, folderName+"_backup_")
 	}
 
-	r, err := zip.OpenReader(filepath.Join(outDir, zipName))
+	f, err := os.Open(filepath.Join(outDir, archiveName))
 	if err != nil {
-		t.Fatalf("OpenReader() error = %v", err)
+		t.Fatalf("open archive: %v", err)
 	}
-	defer r.Close()
+	defer f.Close()
+
+	gr, err := gzip.NewReader(f)
+	if err != nil {
+		t.Fatalf("gzip.NewReader() error = %v", err)
+	}
+	defer gr.Close()
 
 	names := map[string]bool{}
-	for _, f := range r.File {
-		names[f.Name] = true
+	tr := tar.NewReader(gr)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			t.Fatalf("read entry: %v", err)
+		}
+		names[hdr.Name] = true
 	}
 	if !names["main.go"] {
-		t.Errorf("zip missing main.go, got %v", names)
+		t.Errorf("archive missing main.go, got %v", names)
 	}
 	if !names[".gitignore"] {
-		t.Errorf("zip missing .gitignore, got %v", names)
+		t.Errorf("archive missing .gitignore, got %v", names)
 	}
 	if names["debug.log"] {
-		t.Errorf("zip should not contain debug.log, got %v", names)
+		t.Errorf("archive should not contain debug.log, got %v", names)
 	}
 }
 
