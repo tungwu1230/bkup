@@ -20,3 +20,21 @@ archives:
 
 checksum:
   name_template: checksums.txt
+
+homebrew_casks:
+  - name: bkup
+    repository:
+      owner: tungwu1230
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: https://github.com/tungwu1230/bkup
+    description: Back up a folder into a tar.gz archive, honoring its root .gitignore
+    commit_msg_template: "Update {{ .ProjectName }} to {{ .Tag }}"
+    # The binary is not signed/notarized with an Apple developer ID, so strip
+    # the quarantine bit Gatekeeper would otherwise enforce on cask installs.
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/bkup"]
+          end

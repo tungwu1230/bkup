@@ -13,6 +13,12 @@ all preserved.
 
 ## Install
 
+### With Homebrew (macOS)
+
+```sh
+brew install tungwu1230/tap/bkup
+```
+
 ### With Go
 
 Requires Go 1.26+.
@@ -20,10 +26,6 @@ Requires Go 1.26+.
 ```sh
 go install github.com/tungwu1230/bkup@latest
 ```
-
-> Note: until this repository is made public, the command above only works
-> for users with access. Alternatively, clone the repo and run `go install .`
-> from its root.
 
 This builds the binary into `$(go env GOPATH)/bin/bkup`. Make sure that
 directory is on your `PATH`:
