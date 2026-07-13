@@ -13,6 +13,8 @@ all preserved.
 
 ## Install
 
+### With Go
+
 Requires Go 1.26+.
 
 ```sh
@@ -29,6 +31,27 @@ directory is on your `PATH`:
 ```sh
 export PATH="$PATH:$(go env GOPATH)/bin"
 ```
+
+### Download a release binary
+
+No Go toolchain required. Grab the archive for your OS/architecture from
+the [releases page](https://github.com/tungwu1230/bkup/releases), verify
+it against `checksums.txt`, and put the binary anywhere on your `PATH`:
+
+```sh
+tar -xzf bkup_<version>_<os>_<arch>.tar.gz
+mv bkup /usr/local/bin/
+```
+
+For example, on an Apple Silicon Mac:
+
+```sh
+shasum -a 256 -c --ignore-missing checksums.txt
+tar -xzf bkup_0.1.0_darwin_arm64.tar.gz
+mv bkup /usr/local/bin/
+```
+
+(Windows releases are `.zip` archives containing `bkup.exe`.)
 
 ## Usage
 
