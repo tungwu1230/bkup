@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"bkup/internal/naming"
+	"github.com/tungwu1230/bkup/internal/naming"
 )
 
 func TestOutputPath_BuildsFilenameFromFolderNameAndDate(t *testing.T) {

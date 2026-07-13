@@ -8,10 +8,10 @@ import (
 	"os"
 	"time"
 
-	"bkup/internal/archive"
-	"bkup/internal/ignore"
-	"bkup/internal/naming"
-	"bkup/internal/walker"
+	"github.com/tungwu1230/bkup/internal/archive"
+	"github.com/tungwu1230/bkup/internal/ignore"
+	"github.com/tungwu1230/bkup/internal/naming"
+	"github.com/tungwu1230/bkup/internal/walker"
 )
 
 func main() {

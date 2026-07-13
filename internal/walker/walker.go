@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"bkup/internal/ignore"
+	"github.com/tungwu1230/bkup/internal/ignore"
 )
 
 // gitDir is always excluded, independent of .gitignore rules.

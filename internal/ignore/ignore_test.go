@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"bkup/internal/ignore"
+	"github.com/tungwu1230/bkup/internal/ignore"
 )
 
 func TestMatch_IgnoresFileMatchingPattern(t *testing.T) {

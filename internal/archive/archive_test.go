@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"bkup/internal/archive"
+	"github.com/tungwu1230/bkup/internal/archive"
 )
 
 func TestCreate_WritesFilesWithRelativePathsAndContent(t *testing.T) {

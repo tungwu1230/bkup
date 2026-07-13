@@ -1,4 +1,4 @@
-module bkup
+module github.com/tungwu1230/bkup
 
 go 1.26.3
 
