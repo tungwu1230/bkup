@@ -93,3 +93,7 @@ go test ./...
 
 This project was built test-first (TDD): each package's behavior is pinned
 down by tests before/alongside its implementation.
+
+## License
+
+[MIT](LICENSE)
