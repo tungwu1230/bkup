@@ -123,6 +123,16 @@ func TestRun_HelpFlagReturnsErrHelpAndPrintsFolderUsage(t *testing.T) {
 	}
 }
 
+func TestRun_VersionFlagPrintsVersion(t *testing.T) {
+	var stdout bytes.Buffer
+	if err := Run([]string{"--version"}, &stdout); err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if got, want := stdout.String(), "bkup "+version+"\n"; got != want {
+		t.Errorf("stdout = %q, want %q", got, want)
+	}
+}
+
 func mustWrite(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {

@@ -14,6 +14,10 @@ import (
 	"github.com/tungwu1230/bkup/internal/walker"
 )
 
+// version is overridden at release time by GoReleaser via
+// -ldflags "-X main.version=...".
+var version = "dev"
+
 func main() {
 	err := Run(os.Args[1:], os.Stdout)
 	if errors.Is(err, flag.ErrHelp) {
@@ -38,6 +42,9 @@ func Run(args []string, stdout io.Writer) error {
 	fs.BoolVar(&verbose, "v", false, "list files as they are packed")
 	fs.BoolVar(&verbose, "verbose", false, "list files as they are packed")
 
+	var showVersion bool
+	fs.BoolVar(&showVersion, "version", false, "print version and exit")
+
 	fs.Usage = func() {
 		fmt.Fprintln(fs.Output(), "Usage: bkup [-o output-dir] [-v] <folder>")
 		fmt.Fprintln(fs.Output())
@@ -46,6 +53,10 @@ func Run(args []string, stdout io.Writer) error {
 
 	if err := fs.Parse(args); err != nil {
 		return err
+	}
+	if showVersion {
+		fmt.Fprintln(stdout, "bkup", version)
+		return nil
 	}
 	if fs.NArg() < 1 {
 		fs.Usage()

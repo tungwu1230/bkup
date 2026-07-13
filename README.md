@@ -1,5 +1,7 @@
 # bkup
 
+[![CI](https://github.com/tungwu1230/bkup/actions/workflows/ci.yml/badge.svg)](https://github.com/tungwu1230/bkup/actions/workflows/ci.yml)
+
 A CLI that backs up a folder into a tar.gz archive, the way `git archive`
 would — but it doesn't require the folder to be a git repository, and it
 includes uncommitted files.
