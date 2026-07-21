@@ -6,8 +6,9 @@ A CLI that backs up a folder into a tar.gz archive, the way `git archive`
 would — but it doesn't require the folder to be a git repository, and it
 includes uncommitted files.
 
-It reads the folder's root `.gitignore`, walks the tree, and archives
-everything that isn't excluded (also skipping `.git/` unconditionally).
+It reads the folder's `.gitignore` files — root and nested — walks the
+tree, and archives everything that isn't excluded (also skipping `.git/`
+unconditionally).
 Modification times, permission bits, symlinks, and empty directories are
 all preserved.
 
@@ -91,9 +92,12 @@ tar -xzf myapp_backup_20260713.tar.gz -C <destination>
 
 ## Behavior notes
 
-- Only the source folder's **root** `.gitignore` is honored — nested
-  `.gitignore` files in subdirectories are not read. This is a deliberate
-  scope decision, not a limitation of the underlying matcher.
+- Every directory's own `.gitignore` is honored, scoped to that directory's
+  subtree — not just the source folder's root one.
+- A nested `.gitignore` can add exclusions on top of its ancestors', but it
+  cannot re-include (`!`-negate) a path an ancestor `.gitignore` already
+  excludes. This mirrors git's own documented limitation for excluded
+  directories, extended here to individual files for simplicity.
 - `.git/` is always excluded, regardless of `.gitignore` contents.
 - Symlinks are stored as symlinks (not followed), so a link pointing outside
   the folder is preserved as-is rather than pulling in its target.
