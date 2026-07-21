@@ -103,6 +103,180 @@ func TestCreate_PreservesSymlinksWithoutFollowingThem(t *testing.T) {
 	}
 }
 
+func TestExtract_WritesFilesAndPreservesSymlinks(t *testing.T) {
+	srcDir := t.TempDir()
+	writeFile(t, filepath.Join(srcDir, "main.go"), "package main")
+	if err := os.MkdirAll(filepath.Join(srcDir, "src"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	writeFile(t, filepath.Join(srcDir, "src", "app.go"), "package src")
+	if err := os.Symlink("app.go", filepath.Join(srcDir, "src", "link.go")); err != nil {
+		t.Fatalf("symlink: %v", err)
+	}
+
+	archivePath := filepath.Join(t.TempDir(), "out.tar.gz")
+	entries := []string{"main.go", "src", "src/app.go", "src/link.go"}
+	if err := archive.Create(archivePath, srcDir, entries); err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+
+	destDir := t.TempDir()
+	if err := archive.Extract(archivePath, destDir); err != nil {
+		t.Fatalf("Extract() error = %v", err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(destDir, "main.go"))
+	if err != nil {
+		t.Fatalf("read main.go: %v", err)
+	}
+	if string(got) != "package main" {
+		t.Errorf("main.go content = %q, want %q", got, "package main")
+	}
+
+	link, err := os.Readlink(filepath.Join(destDir, "src", "link.go"))
+	if err != nil {
+		t.Fatalf("readlink: %v", err)
+	}
+	if link != "app.go" {
+		t.Errorf("link target = %q, want %q", link, "app.go")
+	}
+}
+
+func TestExtract_RejectsPathTraversal(t *testing.T) {
+	archivePath := filepath.Join(t.TempDir(), "evil.tar.gz")
+	writeMaliciousArchive(t, archivePath, "../evil.txt", "pwned")
+
+	destDir := t.TempDir()
+	if err := archive.Extract(archivePath, destDir); err == nil {
+		t.Fatal("Extract() error = nil, want error for path-traversing entry")
+	}
+
+	escaped := filepath.Join(filepath.Dir(destDir), "evil.txt")
+	if _, err := os.Stat(escaped); !os.IsNotExist(err) {
+		t.Errorf("path-traversal entry was written outside destDir at %s", escaped)
+	}
+}
+
+func TestExtract_RejectsSymlinkTargetEscapingDestDir(t *testing.T) {
+	archivePath := filepath.Join(t.TempDir(), "evil.tar.gz")
+	writeMaliciousSymlink(t, archivePath, "link", "../../secret.txt")
+
+	destDir := t.TempDir()
+	if err := archive.Extract(archivePath, destDir); err == nil {
+		t.Fatal("Extract() error = nil, want error for symlink escaping destDir")
+	}
+
+	if _, err := os.Lstat(filepath.Join(destDir, "link")); !os.IsNotExist(err) {
+		t.Errorf("escaping symlink entry was written into destDir")
+	}
+}
+
+func TestExtract_DoesNotWriteThroughPreexistingSymlink(t *testing.T) {
+	outsideDir := t.TempDir()
+	outsidePath := filepath.Join(outsideDir, "outside.txt")
+	writeFile(t, outsidePath, "original")
+
+	destDir := t.TempDir()
+	if err := os.Symlink(outsidePath, filepath.Join(destDir, "config")); err != nil {
+		t.Fatalf("symlink: %v", err)
+	}
+
+	archivePath := filepath.Join(t.TempDir(), "out.tar.gz")
+	srcDir := t.TempDir()
+	writeFile(t, filepath.Join(srcDir, "config"), "safe")
+	if err := archive.Create(archivePath, srcDir, []string{"config"}); err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+
+	if err := archive.Extract(archivePath, destDir); err != nil {
+		t.Fatalf("Extract() error = %v", err)
+	}
+
+	outsideContent, err := os.ReadFile(outsidePath)
+	if err != nil {
+		t.Fatalf("read outside file: %v", err)
+	}
+	if string(outsideContent) != "original" {
+		t.Errorf("outside file was written through symlink, content = %q", outsideContent)
+	}
+
+	fi, err := os.Lstat(filepath.Join(destDir, "config"))
+	if err != nil {
+		t.Fatalf("lstat: %v", err)
+	}
+	if fi.Mode()&os.ModeSymlink != 0 {
+		t.Fatal("destDir/config is still a symlink, want regular file")
+	}
+	insideContent, err := os.ReadFile(filepath.Join(destDir, "config"))
+	if err != nil {
+		t.Fatalf("read destDir/config: %v", err)
+	}
+	if string(insideContent) != "safe" {
+		t.Errorf("destDir/config content = %q, want %q", insideContent, "safe")
+	}
+}
+
+func writeMaliciousSymlink(t *testing.T, path, name, linkname string) {
+	t.Helper()
+
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatalf("create archive: %v", err)
+	}
+	defer f.Close()
+
+	gw := gzip.NewWriter(f)
+	tw := tar.NewWriter(gw)
+
+	hdr := &tar.Header{
+		Name:     name,
+		Mode:     0o777,
+		Typeflag: tar.TypeSymlink,
+		Linkname: linkname,
+	}
+	if err := tw.WriteHeader(hdr); err != nil {
+		t.Fatalf("write header: %v", err)
+	}
+	if err := tw.Close(); err != nil {
+		t.Fatalf("close tar writer: %v", err)
+	}
+	if err := gw.Close(); err != nil {
+		t.Fatalf("close gzip writer: %v", err)
+	}
+}
+
+func writeMaliciousArchive(t *testing.T, path, name, content string) {
+	t.Helper()
+
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatalf("create archive: %v", err)
+	}
+	defer f.Close()
+
+	gw := gzip.NewWriter(f)
+	tw := tar.NewWriter(gw)
+
+	hdr := &tar.Header{
+		Name:     name,
+		Mode:     0o644,
+		Size:     int64(len(content)),
+		Typeflag: tar.TypeReg,
+	}
+	if err := tw.WriteHeader(hdr); err != nil {
+		t.Fatalf("write header: %v", err)
+	}
+	if _, err := tw.Write([]byte(content)); err != nil {
+		t.Fatalf("write content: %v", err)
+	}
+	if err := tw.Close(); err != nil {
+		t.Fatalf("close tar writer: %v", err)
+	}
+	if err := gw.Close(); err != nil {
+		t.Fatalf("close gzip writer: %v", err)
+	}
+}
+
 type archiveEntry struct {
 	hdr     *tar.Header
 	content string
