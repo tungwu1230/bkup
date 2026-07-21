@@ -20,6 +20,16 @@ all preserved.
 brew install tungwu1230/tap/bkup
 ```
 
+`bkup` is installed as a Homebrew **cask**, not a formula, so update it with:
+
+```sh
+brew update
+brew upgrade --cask bkup
+```
+
+(`brew upgrade bkup` without `--cask` looks for a formula and may report
+"already up to date" even when a newer cask version is available.)
+
 ### With Go
 
 Requires Go 1.26+.
