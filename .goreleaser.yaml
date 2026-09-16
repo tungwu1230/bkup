@@ -32,6 +32,13 @@ homebrew_casks:
     commit_msg_template: "Update {{ .ProjectName }} to {{ .Tag }}"
     # The binary is not signed/notarized with an Apple developer ID, so strip
     # the quarantine bit Gatekeeper would otherwise enforce on cask installs.
+    #
+    # `hooks.post.install` emits Homebrew's now-deprecated `postflight do...end`
+    # block, which prints a warning on every `brew` invocation. GoReleaser is
+    # adding a replacement (`hooks.post.install_steps`, using Homebrew's
+    # declarative step DSL) in https://github.com/goreleaser/goreleaser/pull/6873
+    # (closes https://github.com/goreleaser/goreleaser/issues/6870). Migrate to
+    # `install_steps` once that ships.
     hooks:
       post:
         install: |
